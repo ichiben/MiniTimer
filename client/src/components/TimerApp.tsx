@@ -18,34 +18,6 @@ export default function TimerApp() {
   const intervalRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize audio
-  useEffect(() => {
-    // Create a simple audio context for the beep sound
-    audioRef.current = new Audio();
-    // Create a beep sound using data URL (simple tone)
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const createBeep = () => {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 1);
-    };
-
-    audioRef.current.play = () => {
-      createBeep();
-      return Promise.resolve();
-    };
-  }, []);
 
   const startTimer = useCallback(() => {
     const total = minutes * 60 + seconds;
@@ -74,18 +46,48 @@ export default function TimerApp() {
     }
   }, []);
 
+  // Create audio alert function
+  const playAlertSound = useCallback(() => {
+    if (isMuted) return;
+    
+    try {
+      // Try to use Web Audio API for better browser support
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      const createBeep = (frequency: number, duration: number, delay: number = 0) => {
+        setTimeout(() => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = frequency;
+          oscillator.type = 'sine';
+          
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + duration);
+        }, delay);
+      };
+
+      // Play three ascending beeps
+      createBeep(600, 0.2, 0);
+      createBeep(800, 0.2, 300);
+      createBeep(1000, 0.3, 600);
+      
+    } catch (error) {
+      // Fallback for browsers that don't support Web Audio API
+      console.log('Web Audio API not supported, audio alert unavailable');
+    }
+  }, [isMuted]);
+
   const handleTimeUp = useCallback(() => {
     setIsRunning(false);
-    if (!isMuted && audioRef.current) {
-      // Play multiple beeps
-      for (let i = 0; i < 3; i++) {
-        setTimeout(() => {
-          if (audioRef.current?.play) {
-            audioRef.current.play();
-          }
-        }, i * 500);
-      }
-    }
+    playAlertSound();
+    
     // Show browser notification if permission granted
     if (Notification.permission === 'granted') {
       new Notification('Timer Complete!', {
@@ -93,7 +95,7 @@ export default function TimerApp() {
         icon: '/favicon.ico'
       });
     }
-  }, [isMuted]);
+  }, [playAlertSound]);
 
   // Timer countdown effect
   useEffect(() => {
