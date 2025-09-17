@@ -120,15 +120,61 @@ export default function TimerApp() {
     };
   }, [isRunning, timeRemaining]);
 
-  // Request notification permission on first load
+  const hasTimeSet = minutes > 0 || seconds > 0;
+  const isTimerActive = timeRemaining > 0;
+
+  // Request notification permission and set up keyboard shortcuts
   useEffect(() => {
     if (Notification.permission === 'default') {
       Notification.requestPermission();
     }
-  }, []);
 
-  const hasTimeSet = minutes > 0 || seconds > 0;
-  const isTimerActive = timeRemaining > 0;
+    // Keyboard shortcuts
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Only trigger if not typing in an input field
+      if (event.target && (event.target as HTMLElement).tagName === 'INPUT') {
+        return;
+      }
+
+      switch (event.key.toLowerCase()) {
+        case ' ':
+          event.preventDefault();
+          if (isRunning) {
+            pauseTimer();
+          } else if (hasTimeSet || isTimerActive) {
+            startTimer();
+          }
+          break;
+        case 'r':
+          event.preventDefault();
+          resetTimer();
+          break;
+        case 'm':
+          event.preventDefault();
+          setIsMuted(!isMuted);
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [isRunning, hasTimeSet, isTimerActive, startTimer, pauseTimer, resetTimer, isMuted]);
+
+  // Update browser tab title with remaining time
+  useEffect(() => {
+    if (isRunning && timeRemaining > 0) {
+      const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      };
+      document.title = `⏰ ${formatTime(timeRemaining)} - Timer`;
+    } else if (timeRemaining === 0 && totalTime > 0) {
+      document.title = '✅ Time\'s up! - Timer';
+    } else {
+      document.title = 'Timer - Set and Track Your Time';
+    }
+  }, [isRunning, timeRemaining, totalTime]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
