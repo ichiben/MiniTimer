@@ -234,9 +234,16 @@ export default function TimerApp() {
 
         {/* Status Messages */}
         {!hasTimeSet && !isTimerActive && (
-          <p className="text-center text-muted-foreground text-sm" data-testid="text-instruction">
-            Set a time above to start your timer
-          </p>
+          <div className="text-center space-y-2">
+            <p className="text-muted-foreground text-sm" data-testid="text-instruction">
+              Set a time above to start your timer
+            </p>
+            <p className="text-muted-foreground text-xs" data-testid="text-shortcuts">
+              Keyboard shortcuts: <kbd className="px-1 py-0.5 text-xs bg-muted rounded">Space</kbd> to start/pause, 
+              <kbd className="px-1 py-0.5 text-xs bg-muted rounded ml-1">R</kbd> to reset, 
+              <kbd className="px-1 py-0.5 text-xs bg-muted rounded ml-1">M</kbd> to toggle mute
+            </p>
+          </div>
         )}
 
         {isMuted && (

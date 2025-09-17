@@ -83,11 +83,16 @@ export default function TimerDisplay({ timeRemaining, totalTime, isRunning, onTi
         </div>
       </div>
       
-      {/* Status indicator */}
+      {/* Status indicator with celebration animation */}
       {timeRemaining === 0 && (
-        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
-          <div className="text-sm font-medium text-chart-1 animate-pulse" data-testid="status-complete">
-            Time's up!
+        <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
+          <div className="text-center space-y-2">
+            <div className="text-2xl animate-bounce" data-testid="celebration-emoji">
+              🎉
+            </div>
+            <div className="text-sm font-medium text-chart-1 animate-pulse" data-testid="status-complete">
+              Time's up!
+            </div>
           </div>
         </div>
       )}
